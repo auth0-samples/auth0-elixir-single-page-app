@@ -1,0 +1,186 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Single Page Application</title>
+    <script src="https://cdn.auth0.com/js/auth0/9.0.2/auth0.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="http://app1.com:3000/js/app.js"></script>
+  </head>
+  <body>
+    <ul id="login" style="display:none">
+      <li>
+        <a id="authenticate-centralised" href="#">Sign in</a>
+      </li>
+    </ul>
+    <ul id="logout" style="display:none">
+      <li>
+        <a id="sso-logout" href="#">Log out (clear local storage and kill SSO Session)</a>
+      </li>
+      <li>
+        <a id="local-logout" href="#">Log out locally (clear local storage only)</a>
+      </li>
+    </ul>
+    <div>
+      <p id="status"></p>
+    </div>
+    <div id="app" style="display:none;">
+      <button id="get-profile-authentication-userinfo">Get Profile Auth</button>
+      <button id="get-profile-managementapi">Get Profile Mgmt API</button>
+      <div id="results"><pre></pre></div>
+    </div>
+
+    <script>
+
+      const AUTH0_CLIENT_ID = 'zalZ1MTxYGmq72QYJ3fhsMl13Z5xfZga';
+      const AUTH0_DOMAIN = 'demonstration.auth0.com';
+      const AUDIENCE = 'https://demonstration.auth0.com/api/v2/';
+      const SCOPE = 'openid profile email';
+      const AUTH0_CALLBACK_URL = 'http://app1.com:3000';
+      const AUTH0_CONNECTION = 'Username-Password-Authentication';
+
+      const auth0WebAuth = new auth0.WebAuth({
+        domain: AUTH0_DOMAIN,
+        clientID: AUTH0_CLIENT_ID,
+        redirectUri: AUTH0_CALLBACK_URL,
+        responseType: 'id_token token',
+        audience: AUDIENCE,
+        scope: SCOPE
+      });
+
+      const auth0Authentication = new auth0.Authentication(auth0WebAuth, {
+        domain: AUTH0_DOMAIN,
+        clientID: AUTH0_CLIENT_ID
+      });
+
+      function displayStatus () {
+        const accessToken = localStorage.getItem('accessToken');
+        const expirationDate = new Date(Number.parseInt(localStorage.getItem('expirationDate')));
+        const isExpired = expirationDate < new Date();
+        let status;
+
+        if (!accessToken) {
+          status = 'There is no access token present in local storage, meaning that you are not logged in. <a href="#" onclick="checkSession()">Click here to attempt an SSO login</a>';
+        } else if (isExpired) {
+          status = 'There is an expired access token in local storage. <a href="#" onclick="checkSession()">Click here to renew it</a>';
+        } else {
+          status = `There is an access token in local storage, and it expires on ${expirationDate}. <a href="#" onclick="checkSession()">Click here to renew it</a>`;
+        }
+        $('#status').html(status);
+
+        if (accessToken && !isExpired) {
+          $('#login').hide();
+          $('#logout').show();
+          $('#app').show();
+        } else {
+          $('#app').hide();
+          $('#logout').hide();
+          $('#login').show();
+        }
+      }
+
+      function getAccessToken () {
+        return localStorage.getItem('accessToken');
+      }
+
+      function saveAuthResult (result) {
+        localStorage.setItem('accessToken', result.accessToken);
+        localStorage.setItem('idToken', result.idToken);
+        localStorage.setItem('expirationDate', Date.now() + Number.parseInt(result.expiresIn) * 1000);
+        displayStatus();
+      }
+
+      function checkSession () {
+        auth0WebAuth.checkSession({
+          responseType: 'token id_token',
+          scope: SCOPE,
+          connection: AUTH0_CONNECTION,
+          redirectUri: 'http://app1.com:3000/callback.html',
+          timeout: 5000,
+          usePostMessage: true
+        }, function (err, result) {
+          if (err) {
+            alert(`Could not get a new token using silent authentication (${err.error}). Opening login page...`);
+            $('#app').hide();
+            $('#logout').hide();
+            $('#login').show();
+          } else {
+            saveAuthResult(result);
+          }
+        });
+      }
+
+      $(function () {
+        $('#authenticate-centralised').on('click', function (e) {
+          e.preventDefault();
+          $('#embedded-login-customui').hide();
+          $('#app').hide();
+          auth0WebAuth.authorize();
+        });
+
+        $('#sso-logout').click(function (e) {
+          e.preventDefault();
+          localStorage.clear();
+          auth0WebAuth.logout({ returnTo: 'http://app1.com:3000' });
+        });
+
+        $('#local-logout').click(function (e) {
+          e.preventDefault();
+          localStorage.clear();
+          location.href = '/';
+        });
+
+        $('#get-profile-authentication-userinfo').on('click', function (e) {
+          e.preventDefault();
+          auth0Authentication.userInfo(getAccessToken(), (err, usrInfo) => {
+            if (err) {
+                  // handle error
+              console.error('Failed to get userInfo');
+              return;
+            }
+            $('#results pre').text(JSON.stringify(usrInfo, null, 2));
+          });
+        });
+
+        $('#get-profile-managementapi').on('click', function (e) {
+          e.preventDefault();
+          auth0WebAuth.checkSession({
+            audience: `https://${AUTH0_DOMAIN}/api/v2/`,
+            scope: 'read:current_user'
+          },
+                function (err, result) {
+                  if (!err) {
+                    var auth0Manage = new auth0.Management({
+                      domain: AUTH0_DOMAIN,
+                      token: result.accessToken
+                    });
+                    auth0Manage.getUser(result.idTokenPayload.sub, function (err, usrInfo) {
+                      if (!err) {
+                        // use userInfo
+                        $('#results pre').text(JSON.stringify(usrInfo, null, 2));
+                      } else {
+                        // handle error
+                      }
+                    });
+                  } else {
+                      // handle error
+                  }
+                }
+              );
+        });
+
+        // execute this code
+        auth0WebAuth.parseHash(window.location.hash, function (err, result) {
+          if (err) {
+            console.error(err);
+          } else if (result) {
+            saveAuthResult(result);
+          }
+        });
+        // kick off display status
+        displayStatus();
+      });
+
+    </script>
+
+  </body>
+</html>
