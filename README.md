@@ -70,6 +70,7 @@ Client ID, and Auth0 Domain.  eg.
 ```
 const AUTH0_CLIENT_ID = 'zalZ1MTxYGmq72QYJ3fhsMl13Z5xfZga';
 const AUTH0_DOMAIN = 'demonstration.auth0.com';
+const AUDIENCE = 'https://demonstration.auth0.com/api/v2/';
 ```
 
 To start your Phoenix server:
@@ -79,7 +80,7 @@ To start your Phoenix server:
   * Start Phoenix endpoint with `mix phx.server`
 
 
-Then access the application from browser at `http://app1.com:4000`
+Then access the application from browser at `http://app1.com:3000`
 
 
 Ready to run in production? Please [check the phoenix deployment guides](http://www.phoenixframework.org/docs/deployment).
