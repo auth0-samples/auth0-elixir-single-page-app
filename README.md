@@ -48,7 +48,7 @@ Under Advanced Settings -> Oauth, switch ON the OIDC Conformant toggle.
 Set up a Database connection, and optionally social connections.
 For example, test against Auth0 DB Connection and Google Social Auth.
 
-Note: Ordinarily, Phoenix apps by defualt use port 3000.
+Note: Phoenix apps by default use port 4000.
 This sample uses port 3000 - see `config/dev.exs`
 
 ### Locally
