@@ -93,6 +93,13 @@ Ready to run in production? Please [check the phoenix deployment guides](http://
   * Mailing list: http://groups.google.com/group/phoenix-talk
   * Source: https://github.com/phoenixframework/phoenix
 
+## Running the Sample With Docker
+
+In order to run the example with docker you need to have `docker` installed.
+
+Set the varibles for your application and configure `/etc/hosts` file as explained [previously](#locally).
+
+Execute in command line `sh exec.sh` to run the Docker in Linux, or `.\exec.ps1` to run the Docker in Windows.
 
 ## What is Auth0?
 
@@ -116,7 +123,7 @@ If you have found a bug or if you have a feature request, please report them at 
 
 ## Author
 
-[Auth0](auth0.com)
+[Auth0](https://auth0.com)
 
 ## License
 
